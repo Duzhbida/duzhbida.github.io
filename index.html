@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Квадрат Кови | Тайм-менеджмент</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="icon" href="./0b247b4b-e8da-43fd-b2f5-c3d2b19e2319.jpg">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Orbitron', sans-serif;
+      background: url('https://images.unsplash.com/photo-1607746882042-944635dfe10e') no-repeat center center fixed;
+      background-size: cover;
+      color: white;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 2rem;
+    }
+
+    .matrix {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .quadrant {
+      background: rgba(0, 0, 0, 0.6);
+      border: 2px solid #00ffff;
+      border-radius: 15px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 385px;
+    }
+
+    .quadrant h2 {
+      font-size: 1.2rem;
+      margin-bottom: 10px;
+    }
+
+    .tasks {
+      flex: 1;
+      overflow-y: hidden;
+      margin-bottom: 10px;
+    }
+
+    .task {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 5px 10px;
+      margin-bottom: 5px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .task input[type="text"] {
+      background: transparent;
+      border: none;
+      color: white;
+      width: 100%;
+      text-decoration: none;
+    }
+
+    .task.completed input[type="text"] {
+      text-decoration: line-through;
+      opacity: 0.6;
+    }
+
+    .task input[type="text"]:focus {
+      outline: none;
+    }
+
+    .task input[type="checkbox"] {
+      transform: scale(1.2);
+      cursor: pointer;
+    }
+
+    .delete-btn {
+      background: transparent;
+      border: none;
+      color: #ff5555;
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
+
+    .add-btn {
+      background: #00ffff;
+      color: black;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .add-btn:hover {
+      background: #00cccc;
+    }
+
+    @media (max-width: 768px) {
+      .matrix {
+        grid-template-columns: 1fr;
+        grid-template-rows: repeat(4, auto);
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Квадрат Кови — Тайм-менеджмент онлайн</h1>
+  <div class="matrix" id="matrix">
+    <div class="quadrant" data-id="q1">
+      <h2>I. Важно и Срочно</h2>
+      <div class="tasks" id="tasks-q1"></div>
+      <button class="add-btn" onclick="addTask('q1')">Добавить</button>
+    </div>
+    <div class="quadrant" data-id="q2">
+      <h2>II. Важно и Не срочно</h2>
+      <div class="tasks" id="tasks-q2"></div>
+      <button class="add-btn" onclick="addTask('q2')">Добавить</button>
+    </div>
+    <div class="quadrant" data-id="q3">
+      <h2>III. Не важно, но Срочно</h2>
+      <div class="tasks" id="tasks-q3"></div>
+      <button class="add-btn" onclick="addTask('q3')">Добавить</button>
+    </div>
+    <div class="quadrant" data-id="q4">
+      <h2>IV. Не важно и Не срочно</h2>
+      <div class="tasks" id="tasks-q4"></div>
+      <button class="add-btn" onclick="addTask('q4')">Добавить</button>
+    </div>
+  </div>
+
+  <script>
+    const loadTasks = () => {
+      ['q1', 'q2', 'q3', 'q4'].forEach(id => {
+        const tasks = JSON.parse(localStorage.getItem(id) || '[]');
+        const container = document.getElementById(`tasks-${id}`);
+        container.innerHTML = '';
+        tasks.forEach((task, index) => {
+          const div = document.createElement('div');
+          div.className = 'task';
+          if (task.completed) div.classList.add('completed');
+
+          const checkbox = document.createElement('input');
+          checkbox.type = 'checkbox';
+          checkbox.checked = task.completed;
+          checkbox.onchange = () => toggleCompleted(id, index);
+
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.value = task.text;
+          input.onchange = () => updateTask(id, index, input.value);
+
+          const deleteBtn = document.createElement('button');
+          deleteBtn.className = 'delete-btn';
+          deleteBtn.innerHTML = '×';
+          deleteBtn.onclick = () => deleteTask(id, index);
+
+          div.appendChild(checkbox);
+          div.appendChild(input);
+          div.appendChild(deleteBtn);
+          container.appendChild(div);
+        });
+      });
+    }
+
+    const addTask = (id) => {
+      const tasks = JSON.parse(localStorage.getItem(id) || '[]');
+      tasks.push({ text: '', completed: false });
+      localStorage.setItem(id, JSON.stringify(tasks));
+      loadTasks();
+    }
+
+    const updateTask = (id, index, value) => {
+      const tasks = JSON.parse(localStorage.getItem(id) || '[]');
+      tasks[index].text = value;
+      localStorage.setItem(id, JSON.stringify(tasks));
+      loadTasks();
+    }
+
+    const toggleCompleted = (id, index) => {
+      const tasks = JSON.parse(localStorage.getItem(id) || '[]');
+      tasks[index].completed = !tasks[index].completed;
+      localStorage.setItem(id, JSON.stringify(tasks));
+      loadTasks();
+    }
+
+    const deleteTask = (id, index) => {
+      const tasks = JSON.parse(localStorage.getItem(id) || '[]');
+      tasks.splice(index, 1);
+      localStorage.setItem(id, JSON.stringify(tasks));
+      loadTasks();
+    }
+
+    loadTasks();
+  </script>
+</body>
+</html>
